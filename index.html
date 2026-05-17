@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS — AI Career Mentor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════
+       DESIGN TOKENS & RESET
+    ═══════════════════════════════════════════ */
+    :root {
+      --bg:         #080c14;
+      --surface:    #0f1520;
+      --card:       #131b2a;
+      --border:     #1e2d44;
+      --accent:     #00d4ff;
+      --accent2:    #7b5ea7;
+      --accent3:    #ff6b6b;
+      --text:       #e2eaf5;
+      --muted:      #6b7e99;
+      --user-bg:    #1a2a4a;
+      --bot-bg:     #111827;
+      --radius:     14px;
+      --font-head:  'Syne', sans-serif;
+      --font-body:  'DM Sans', sans-serif;
+      --glow:       0 0 30px rgba(0,212,255,.18);
+      --transition: all .25s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient background orbs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,212,255,.07) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: drift1 18s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(123,94,167,.08) 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      animation: drift2 22s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift1 { to { transform: translate(80px, 60px); } }
+    @keyframes drift2 { to { transform: translate(-60px, -80px); } }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT SHELL
+    ═══════════════════════════════════════════ */
+    .app {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: 100vh;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════ */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 20px;
+      gap: 24px;
+      overflow-y: auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(0,212,255,.3);
+    }
+    .logo-text {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: .5px;
+    }
+    .logo-text span { color: var(--accent); }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Quick prompt chips */
+    .sidebar-section h3 {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .prompt-chip {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: var(--transition);
+      line-height: 1.4;
+    }
+    .prompt-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,212,255,.06);
+      transform: translateX(3px);
+    }
+    .chip-icon { margin-right: 8px; opacity: .8; }
+
+    /* CV Upload panel */
+    .cv-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .cv-panel h3 {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(0,212,255,.04);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-label { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .upload-label strong { color: var(--accent); }
+
+    .analyze-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      cursor: pointer;
+      transition: var(--transition);
+      opacity: .5;
+      pointer-events: none;
+    }
+    .analyze-btn.ready {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .analyze-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .analyze-btn:active { transform: translateY(0); }
+
+    .file-name {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 8px;
+      word-break: break-all;
+      display: none;
+    }
+
+    /* ═══════════════════════════════════════════
+       MAIN CHAT AREA
+    ═══════════════════════════════════════════ */
+    .main {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .chat-header {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15,21,32,.8);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-family: var(--font-head);
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      display: inline-block;
+      margin-right: 8px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .clear-btn:hover {
+      border-color: var(--accent3);
+      color: var(--accent3);
+    }
+
+    /* Message Feed */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      scroll-behavior: smooth;
+    }
+
+    /* Scrollbar styling */
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Welcome screen */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      text-align: center;
+      gap: 16px;
+      padding: 40px 20px;
+      animation: fadeIn .6s ease;
+    }
+    .welcome-icon {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, rgba(0,212,255,.2), rgba(123,94,167,.2));
+      border: 1px solid rgba(0,212,255,.3);
+      border-radius: 24px;
+      font-size: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow);
+    }
+    .welcome h1 {
+      font-family: var(--font-head);
+      font-size: 28px;
+      font-weight: 800;
+    }
+    .welcome h1 span { color: var(--accent); }
+    .welcome p {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 420px;
+      line-height: 1.6;
+    }
+    .welcome-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      max-width: 500px;
+    }
+    .welcome-chip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text);
+    }
+    .welcome-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,212,255,.06);
+    }
+
+    /* Message bubbles */
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 85%;
+      animation: slideUp .3s ease;
+    }
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .message.bot {
+      align-self: flex-start;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+    .avatar.user-avatar {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+    }
+    .avatar.bot-avatar {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 12px rgba(0,212,255,.3);
+    }
+
+    .bubble {
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 14.5px;
+      line-height: 1.65;
+      max-width: 100%;
+    }
+    .user .bubble {
+      background: var(--user-bg);
+      border: 1px solid #2a3f6a;
+      border-bottom-right-radius: 4px;
+      color: var(--text);
+    }
+    .bot .bubble {
+      background: var(--bot-bg);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* Markdown-like rendering inside bot bubbles */
+    .bubble strong { color: var(--accent); font-weight: 600; }
+    .bubble em { color: var(--muted); }
+    .bubble code {
+      background: rgba(0,212,255,.1);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    /* Typing indicator */
+    .typing {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      align-self: flex-start;
+      animation: slideUp .3s ease;
+    }
+    .typing-dots {
+      background: var(--bot-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      padding: 14px 18px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .typing-dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: bounce 1.2s ease-in-out infinite;
+      opacity: .5;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .2s; }
+    .typing-dot:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: .5; }
+      40% { transform: translateY(-8px); opacity: 1; }
+    }
+
+    /* Input area */
+    .input-area {
+      padding: 20px 28px;
+      border-top: 1px solid var(--border);
+      background: rgba(15,21,32,.9);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .input-box {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      resize: none;
+      min-height: 52px;
+      max-height: 160px;
+      transition: var(--transition);
+      line-height: 1.5;
+      outline: none;
+    }
+    .input-box:focus {
+      border-color: rgba(0,212,255,.5);
+      box-shadow: 0 0 0 3px rgba(0,212,255,.08);
+    }
+    .input-box::placeholder { color: var(--muted); }
+
+    .send-btn {
+      width: 52px; height: 52px;
+      border-radius: 13px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(0,212,255,.25);
+    }
+    .send-btn:hover { transform: scale(1.06); filter: brightness(1.1); }
+    .send-btn:active { transform: scale(.97); }
+    .send-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ═══════════════════════════════════════════
+       CV ANALYSIS RESULTS MODAL
+    ═══════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 720px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+      animation: slideUp .3s ease;
+    }
+    .modal::-webkit-scrollbar { width: 4px; }
+    .modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .modal-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .modal-close:hover { color: var(--accent3); border-color: var(--accent3); }
+
+    .modal-title {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .modal-file { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+
+    /* Score ring */
+    .score-section {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .score-ring {
+      position: relative;
+      width: 80px; height: 80px;
+      flex-shrink: 0;
+    }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring circle {
+      fill: none;
+      stroke-width: 6;
+    }
+    .score-track { stroke: var(--border); }
+    .score-fill {
+      stroke: var(--accent);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+      filter: drop-shadow(0 0 6px var(--accent));
+    }
+    .score-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .score-text h3 {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .score-text p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* Analysis sections */
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .analysis-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .analysis-card h4 {
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .analysis-card h4.green  { color: #22c55e; }
+    .analysis-card h4.red    { color: var(--accent3); }
+    .analysis-card h4.blue   { color: var(--accent); }
+    .analysis-card h4.purple { color: var(--accent2); }
+
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      background: rgba(0,212,255,.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,212,255,.25);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag.red {
+      background: rgba(255,107,107,.1);
+      color: var(--accent3);
+      border-color: rgba(255,107,107,.25);
+    }
+
+    .improvement-item {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .improvement-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .issue-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent3);
+      margin-bottom: 4px;
+    }
+    .fix-label {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .fix-icon { color: #22c55e; margin-right: 5px; }
+
+    .step-list { counter-reset: steps; }
+    .step-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Roles */
+    .roles-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .role-tag {
+      background: rgba(123,94,167,.15);
+      color: var(--accent2);
+      border: 1px solid rgba(123,94,167,.3);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: var(--font-head);
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    /* Notification toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--text);
+      z-index: 300;
+      transition: transform .3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { border-color: var(--accent3); color: var(--accent3); }
+    .toast.success { border-color: #22c55e; color: #22c55e; }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 260px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow-x: auto;
+        padding: 16px;
+        gap: 12px;
+      }
+      .logo { padding-bottom: 0; border-bottom: none; width: 100%; }
+      .sidebar-section { min-width: 220px; }
+      .cv-panel { min-width: 220px; }
+      .main { height: calc(100vh - 260px); }
+      .messages { padding: 16px; }
+      .input-area { padding: 12px 16px; }
+      .chat-header { padding: 14px 16px; }
+      .message { max-width: 95%; }
+      .analysis-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     LOADING OVERLAY
+═══════════════════════════════════════════════ -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">ANALYZING YOUR CV…</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TOAST
+═══════════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════
+     CV RESULTS MODAL
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">📄 Resume Analysis</div>
+    <div class="modal-file" id="modalFileName"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     APP SHELL
+═══════════════════════════════════════════════ -->
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <div>
+        <div class="logo-text">NEX<span>US</span></div>
+        <div class="logo-sub">Career Mentor AI</div>
+      </div>
+    </div>
+
+    <!-- Quick prompts -->
+    <div class="sidebar-section">
+      <h3>Quick Prompts</h3>
+
+      <button class="prompt-chip" onclick="sendQuick('I want to become a web developer. Give me a complete roadmap.')">
+        <span class="chip-icon">🌐</span> Web Developer Roadmap
+      </button>
+      <button class="prompt-chip" onclick="sendQuick('What are the best career options after 12th grade in 2025?')">
+        <span class="chip-icon">🎓</span> After 12th Options
+      </button>
+      <button class="prompt-chip" onclick="sendQuick('What are the top in-demand skills for 2025-2026?')">
+        <span class="chip-icon">🔥</span> Top Skills 2025–26
+      </button>
+      <button class="prompt-chip" onclick="sendQuick('How do I break into AI and Machine Learning? Give me a 12-month plan.')">
+        <span class="chip-icon">🤖</span> AI/ML Career Path
+      </button>
+      <button class="prompt-chip" onclick="sendQuick('Give me a cybersecurity career roadmap for a beginner.')">
+        <span class="chip-icon">🔐</span> Cybersecurity Path
+      </button>
+      <button class="prompt-chip" onclick="sendQuick('How should I prepare for a software engineering interview?')">
+        <span class="chip-icon">💼</span> Interview Prep
+      </button>
+    </div>
+
+    <!-- CV Upload -->
+    <div class="cv-panel">
+      <h3>📋 CV / Resume Scanner</h3>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="cvFile" accept=".pdf,.docx" onchange="handleFileSelect(event)" />
+        <div class="upload-icon">⬆️</div>
+        <div class="upload-label">
+          <strong>Drop file or click to browse</strong><br>
+          Supports PDF &amp; DOCX
+        </div>
+      </div>
+
+      <div class="file-name" id="fileName"></div>
+
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyzeCV()">
+        ✦ Analyze Resume
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN CHAT ── -->
+  <main class="main">
+
+    <header class="chat-header">
+      <div>
+        <div class="header-title">
+          <span class="status-dot"></span>Career Mentor
+        </div>
+        <div class="header-subtitle"></div>
+      </div>
+      <button class="clear-btn" onclick="clearChat()">✕ Clear Chat</button>
+    </header>
+
+    <div class="messages" id="messages">
+      <!-- Welcome screen shown when no messages -->
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-icon">🧭</div>
+        <h1>Hi, I'm <span>NEXUS</span></h1>
+        <p>Your AI-powered career mentor. Ask me anything about career paths, skills, education, or upload your CV for instant feedback.</p>
+        <div class="welcome-chips">
+          <button class="welcome-chip" onclick="sendQuick('What career is best for me if I love coding and design?')">💻 Career fit?</button>
+          <button class="welcome-chip" onclick="sendQuick('I want to become a data scientist. Where do I start?')">📊 Data Science path</button>
+          <button class="welcome-chip" onclick="sendQuick('What salary can I expect as a junior web developer?')">💰 Salary insights</button>
+          <button class="welcome-chip" onclick="sendQuick('Best free resources to learn programming in 2025?')">📚 Free resources</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <textarea
+          class="input-box"
+          id="userInput"
+          placeholder="Ask about careers, skills, roadmaps, interviews…"
+          rows="1"
+          onkeydown="handleKeydown(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+          ➤
+        </button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+  /* ── Configuration ─────────────────────────────────────────────────────── */
+  const API_BASE = "http://localhost:5000"; // Change this after deploying backend
+
+  /* ── Conversation history (persisted in memory) ────────────────────────── */
+  let conversationHistory = [];
+  let selectedFile = null;
+
+  /* ══════════════════════════════════════════════
+     CHAT FUNCTIONS
+  ══════════════════════════════════════════════ */
+
+  /** Send a message from the input box */
+  async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Clear input
+    input.value = "";
+    autoResize(input);
+
+    hideWelcome();
+    appendUserMessage(text);
+
+    // Add to history
+    conversationHistory.push({ role: "user", content: text });
+
+    // Show typing indicator
+    const typingEl = showTyping();
+
+    // Disable send while waiting
+    setSendDisabled(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversationHistory }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const reply = data.reply || "I couldn't generate a response. Please try again.";
+
+      // Add assistant reply to history
+      conversationHistory.push({ role: "assistant", content: reply });
+
+      removeTyping(typingEl);
+      appendBotMessage(reply);
+
+    } catch (err) {
+      removeTyping(typingEl);
+      appendBotMessage(`⚠️ Error: ${err.message}\n\nMake sure the backend is running at ${API_BASE}`);
+    }
+
+    setSendDisabled(false);
+    input.focus();
+  }
+
+  /** Send a quick prompt from chips */
+  function sendQuick(prompt) {
+    document.getElementById("userInput").value = prompt;
+    sendMessage();
+  }
+
+  /** Handle keyboard shortcuts */
+  function handleKeydown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  /** Auto-grow textarea */
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  }
+
+  /** Clear the entire conversation */
+  function clearChat() {
+    conversationHistory = [];
+    const msgs = document.getElementById("messages");
+    msgs.innerHTML = `
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-icon">🧭</div>
+        <h1>Hi, I'm <span>NEXUS</span></h1>
+        <p>Your AI-powered career mentor. Ask me anything about career paths, skills, education, or upload your CV for instant feedback.</p>
+        <div class="welcome-chips">
+          <button class="welcome-chip" onclick="sendQuick('What career is best for me if I love coding and design?')">💻 Career fit?</button>
+          <button class="welcome-chip" onclick="sendQuick('I want to become a data scientist. Where do I start?')">📊 Data Science path</button>
+          <button class="welcome-chip" onclick="sendQuick('What salary can I expect as a junior web developer?')">💰 Salary insights</button>
+          <button class="welcome-chip" onclick="sendQuick('Best free resources to learn programming in 2025?')">📚 Free resources</button>
+        </div>
+      </div>`;
+  }
+
+  /* ══════════════════════════════════════════════
+     DOM HELPERS
+  ══════════════════════════════════════════════ */
+
+  function hideWelcome() {
+    const w = document.getElementById("welcomeScreen");
+    if (w) w.remove();
+  }
+
+  function appendUserMessage(text) {
+    const msgs = document.getElementById("messages");
+    const el = document.createElement("div");
+    el.className = "message user";
+    el.innerHTML = `
+      <div class="avatar user-avatar">👤</div>
+      <div class="bubble">${escapeHtml(text)}</div>`;
+    msgs.appendChild(el);
+    scrollBottom();
+  }
+
+  function appendBotMessage(text) {
+    const msgs = document.getElementById("messages");
+    const el = document.createElement("div");
+    el.className = "message bot";
+    el.innerHTML = `
+      <div class="avatar bot-avatar">🧠</div>
+      <div class="bubble">${formatMarkdown(text)}</div>`;
+    msgs.appendChild(el);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById("messages");
+    const el = document.createElement("div");
+    el.className = "typing";
+    el.innerHTML = `
+      <div class="avatar bot-avatar">🧠</div>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    msgs.appendChild(el);
+    scrollBottom();
+    return el;
+  }
+
+  function removeTyping(el) { if (el && el.parentNode) el.remove(); }
+
+  function scrollBottom() {
+    const msgs = document.getElementById("messages");
+    setTimeout(() => msgs.scrollTop = msgs.scrollHeight, 50);
+  }
+
+  function setSendDisabled(disabled) {
+    document.getElementById("sendBtn").disabled = disabled;
+  }
+
+  /** Minimal markdown: **bold**, `code`, line breaks */
+  function formatMarkdown(text) {
+    return escapeHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\n/g, "<br>");
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  /* ══════════════════════════════════════════════
+     CV UPLOAD & ANALYSIS
+  ══════════════════════════════════════════════ */
+
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    selectedFile = file;
+    const nameEl = document.getElementById("fileName");
+    nameEl.textContent = `📎 ${file.name}`;
+    nameEl.style.display = "block";
+
+    const btn = document.getElementById("analyzeBtn");
+    btn.classList.add("ready");
+
+    showToast(`File selected: ${file.name}`, "success");
+  }
+
+  // Drag-and-drop support
+  const zone = document.getElementById("uploadZone");
+  zone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    zone.classList.add("drag-over");
+  });
+  zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    zone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById("cvFile").files = e.dataTransfer.files;
+      handleFileSelect({ target: { files: [file] } });
+    }
+  });
+
+  async function analyzeCV() {
+    if (!selectedFile) return showToast("Please select a file first.", "error");
+
+    showLoading("ANALYZING YOUR CV…");
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const res = await fetch(`${API_BASE}/analyze-cv`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      hideLoading();
+      showAnalysisModal(data.analysis, selectedFile.name);
+
+    } catch (err) {
+      hideLoading();
+      showToast(`Error: ${err.message}`, "error");
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     MODAL: Show CV Analysis Results
+  ══════════════════════════════════════════════ */
+
+  function showAnalysisModal(a, fileName) {
+    document.getElementById("modalFileName").textContent = `📎 ${fileName}`;
+
+    // Score ring calculation
+    const score = Math.min(100, Math.max(0, a.overall_score || 70));
+    const circumference = 2 * Math.PI * 34;
+    const dashOffset = circumference - (score / 100) * circumference;
+
+    // Build skills tags
+    const detectedTags = (a.detected_skills || []).map(s =>
+      `<span class="tag">${s}</span>`).join("") || "<span style='color:var(--muted);font-size:13px'>None detected</span>";
+
+    const missingTags = (a.missing_skills || []).map(s =>
+      `<span class="tag red">${s}</span>`).join("") || "<span style='color:var(--muted);font-size:13px'>None identified</span>";
+
+    // Improvements
+    const improvements = (a.improvements || []).map(imp => `
+      <div class="improvement-item">
+        <div class="issue-label">⚠ ${escapeHtml(imp.issue || "")}</div>
+        <div class="fix-label"><span class="fix-icon">✓</span>${escapeHtml(imp.fix || "")}</div>
+      </div>`).join("") || "<p style='color:var(--muted);font-size:13px'>No major issues found.</p>";
+
+    // ATS tips
+    const atsTips = (a.ats_tips || []).map((t, i) => `
+      <div class="step-item">
+        <div class="step-num">${i + 1}</div>
+        <div>${escapeHtml(t)}</div>
+      </div>`).join("") || "";
+
+    // Next steps
+    const nextSteps = (a.next_steps || []).map((s, i) => `
+      <div class="step-item">
+        <div class="step-num">${i + 1}</div>
+        <div>${escapeHtml(s)}</div>
+      </div>`).join("") || "";
+
+    // Roles
+    const roles = (a.recommended_roles || []).map(r =>
+      `<span class="role-tag">${escapeHtml(r)}</span>`).join("") || "";
+
+    // Strengths
+    const strengths = (a.strengths || []).map(s =>
+      `<div class="step-item"><div class="step-num">✓</div><div>${escapeHtml(s)}</div></div>`).join("") || "";
+
+    document.getElementById("modalContent").innerHTML = `
+      <!-- Score -->
+      <div class="score-section">
+        <div class="score-ring">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle class="score-track" cx="40" cy="40" r="34" stroke-dasharray="${circumference}" />
+            <circle class="score-fill" cx="40" cy="40" r="34"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${dashOffset}" />
+          </svg>
+          <div class="score-num">${score}</div>
+        </div>
+        <div class="score-text">
+          <h3>${getScoreLabel(score)}</h3>
+          <p>${escapeHtml(a.summary || "Analysis complete.")}</p>
+        </div>
+      </div>
+
+      <!-- Skills Grid -->
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <h4 class="blue">⚡ Detected Skills</h4>
+          <div class="tag-list">${detectedTags}</div>
+        </div>
+        <div class="analysis-card">
+          <h4 class="red">📌 Missing Skills</h4>
+          <div class="tag-list">${missingTags}</div>
+        </div>
+      </div>
+
+      <!-- Strengths + Improvements -->
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <h4 class="green">✅ Strengths</h4>
+          <div class="step-list">${strengths}</div>
+        </div>
+        <div class="analysis-card">
+          <h4 class="red">🛠 Improvements</h4>
+          ${improvements}
+        </div>
+      </div>
+
+      <!-- ATS Tips -->
+      ${atsTips ? `
+      <div class="analysis-card" style="margin-bottom:16px">
+        <h4 class="blue">🎯 ATS Optimization Tips</h4>
+        <div class="step-list">${atsTips}</div>
+      </div>` : ""}
+
+      <!-- Recommended Roles -->
+      ${roles ? `
+      <div class="analysis-card" style="margin-bottom:16px">
+        <h4 class="purple">💼 Recommended Roles</h4>
+        <div class="roles-list">${roles}</div>
+      </div>` : ""}
+
+      <!-- Next Steps -->
+      ${nextSteps ? `
+      <div class="analysis-card">
+        <h4 class="green">🚀 Your Next Steps</h4>
+        <div class="step-list">${nextSteps}</div>
+      </div>` : ""}
+    `;
+
+    document.getElementById("modalOverlay").classList.add("open");
+  }
+
+  function getScoreLabel(score) {
+    if (score >= 85) return "🏆 Outstanding Resume";
+    if (score >= 70) return "💪 Strong Resume";
+    if (score >= 55) return "👍 Good Foundation";
+    if (score >= 40) return "⚡ Needs Polish";
+    return "🔨 Major Improvements Needed";
+  }
+
+  function closeModal() {
+    document.getElementById("modalOverlay").classList.remove("open");
+  }
+
+  // Close modal on overlay click
+  document.getElementById("modalOverlay").addEventListener("click", function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  /* ══════════════════════════════════════════════
+     UTILITIES
+  ══════════════════════════════════════════════ */
+
+  function showLoading(text = "LOADING…") {
+    document.getElementById("loadingText").textContent = text;
+    document.getElementById("loadingOverlay").classList.add("show");
+  }
+
+  function hideLoading() {
+    document.getElementById("loadingOverlay").classList.remove("show");
+  }
+
+  let toastTimer;
+  function showToast(msg, type = "") {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+  }
+
+  /* ── Focus input on load ───────────────────────────────────────────────── */
+  window.addEventListener("load", () => {
+    document.getElementById("userInput").focus();
+  });
+</script>
+
+</body>
+</html>

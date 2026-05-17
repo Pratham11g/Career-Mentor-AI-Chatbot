@@ -1,0 +1,7 @@
+flask
+flask-cors
+anthropic
+PyMuPDF
+python-docx
+python-dotenv
+gunicorn
